@@ -80,10 +80,9 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 		res.Error(fmt.Sprintf("配置失败：%v", err))
 		return
 	}
-	z.L().Debug("对象数据", zap.Any("config", newFrpsCfg))
 	cfg := GetCfgModel()
 	cfg.Frps = newFrpsCfg
-	z.L().Debug("cfg", zap.Any("cfg", newFrpsCfg))
+	z.L().Debug("对象数据", zap.Any("config", newFrpsCfg))
 	//下载和接收的最新文件 名称为上传文件的原始名称
 	newBufferBytes, err := ukey.GenConfig(GetCfgBuffer(), false)
 	if err != nil {
