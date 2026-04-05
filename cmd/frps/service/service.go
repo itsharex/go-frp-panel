@@ -15,7 +15,6 @@ import (
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/gs"
 	"github.com/xxl6097/go-service/pkg/gs/igs"
-	"github.com/xxl6097/go-service/pkg/ukey"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
 )
 
@@ -61,7 +60,7 @@ func (s *Service) OnConfig() *service.Config {
 
 func (s *Service) OnVersion() string {
 	pkg.Version()
-	fmt.Println(string(ukey.GetBuffer()))
+	fmt.Println(string(frps.GetCfgBuffer()))
 	return fmt.Sprintf("frps version:%s", version.Full())
 }
 
