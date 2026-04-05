@@ -19,6 +19,7 @@ import (
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/ukey"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -72,17 +73,17 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	z.Println("原始数据", tomlBytes)
+	z.L().Debug("原始数据", zap.ByteString("tomlBytes", tomlBytes))
 	newFrpsCfg := v1.ServerConfig{}
 	err = utils.TomlTextToObject(tomlBytes, &newFrpsCfg)
 	if err != nil {
 		res.Error(fmt.Sprintf("配置失败：%v", err))
 		return
 	}
-	z.Printf("对象数据:%+v", newFrpsCfg)
+	z.L().Debug("对象数据", zap.Any("config", newFrpsCfg))
 	cfg := GetCfgModel()
 	cfg.Frps = newFrpsCfg
-	z.Printf("cfg:%+v", cfg)
+	z.L().Debug("cfg", zap.Any("cfg", newFrpsCfg))
 	//下载和接收的最新文件 名称为上传文件的原始名称
 	newBufferBytes, err := ukey.GenConfig(GetCfgBuffer(), false)
 	if err != nil {
@@ -204,7 +205,7 @@ func (this *frps) apiServerConfigGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	frpsToml := GetCfgModel().Frps
-	z.Println("获取Frps配置:", frpsToml)
+	z.L().Info("获取Frps配置", zap.Any("config", frpsToml))
 	res.Raw = utils.ObjectToTomlText(frpsToml)
 }
 

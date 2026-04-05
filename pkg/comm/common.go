@@ -23,6 +23,7 @@ import (
 	"github.com/xxl6097/go-service/pkg/gs/igs"
 	"github.com/xxl6097/go-service/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/utils/util"
+	"go.uber.org/zap"
 )
 
 type commapi struct {
@@ -35,20 +36,20 @@ func (this *commapi) ApiCMD(w http.ResponseWriter, r *http.Request) {
 	defer f(w)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		z.Error("body读取失败", err)
+		z.L().Warn("body读取失败", zap.Error(err))
 		res.Err(err)
 		return
 	}
 	if body == nil {
 		msg := "body is nil"
-		z.Error(msg)
+		z.L().Warn("body错误", zap.Error(err))
 		res.Err(fmt.Errorf(msg))
 		return
 	}
 	var msg iface2.Message[any]
 	err = json.Unmarshal(body, &msg)
 	if err != nil {
-		z.Error("解析Json对象失败", err)
+		z.L().Warn("解析Json对象失败", zap.Error(err))
 		res.Err(err)
 		return
 	}
@@ -64,15 +65,15 @@ func (this *commapi) ApiCMD(w http.ResponseWriter, r *http.Request) {
 	case ws.CMD:
 		data, ok := msg.Data.(map[string]interface{})
 		if ok {
-			z.Infof("data %+v", data)
+			z.L().Info("数据", zap.Any("data", data))
 			d := data["data"]
 			if d == nil {
-				z.Errorf("data is nil %+v", msg.Data)
+				z.L().Warn("data is nil", zap.Any("data", msg.Data))
 				break
 			}
 			v, okk := d.(string)
 			if !okk {
-				z.Infof("string err %+v", d)
+				z.L().Warn("string err", zap.Any("d", d))
 				break
 			}
 			arrData := strings.Split(v, " ")
@@ -116,12 +117,12 @@ func (this *commapi) ApiFiles(w http.ResponseWriter, r *http.Request) {
 	}](r)
 	if err != nil {
 		res.Error(fmt.Errorf("read param err: %v", err).Error())
-		z.Error(res.Msg)
+		z.L().Warn("err", zap.Any("msg", res.Msg))
 		return
 	}
 	if params == nil {
 		res.Error("params is empty")
-		z.Error(res.Msg)
+		z.L().Warn("err", zap.Any("msg", res.Msg))
 		return
 	}
 	path := params.Path
@@ -188,16 +189,16 @@ func (this *commapi) ApiUpdate(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			res.Response(400, fmt.Sprintf("read request body error: %v", err))
-			z.Warnf("%s", res.Msg)
+			z.L().Warn("put", zap.Any("msg", res.Msg))
 			return
 		}
 		if len(body) == 0 {
 			res.Response(400, "升级URL空的哦～")
-			z.Warnf("%s", res.Msg)
+			z.L().Warn("put", zap.Any("msg", res.Msg))
 			return
 		}
 		binUrl := string(body)
-		z.Debugf("upgrade by url: %s", binUrl)
+		z.L().Debug("使用URL升级", zap.String("binUrl", binUrl))
 		newUrl := utils.DownloadFileWithCancelByUrls(github.Api().GetProxyUrls(binUrl))
 		newFilePath = newUrl
 		break
@@ -230,9 +231,9 @@ func (this *commapi) ApiUpdate(w http.ResponseWriter, r *http.Request) {
 		res.Error("位置请求方法")
 	}
 	if newFilePath != "" {
-		z.Debugf("开始升级 %s", newFilePath)
+		z.L().Debug("开始升级", zap.String("path", newFilePath))
 		err := this.igs.Upgrade(ctx, newFilePath)
-		z.Debug("---->升级", err)
+		z.L().Warn("----升级", zap.Error(err))
 		if err == nil {
 			res.Ok("升级成功～")
 		} else {
