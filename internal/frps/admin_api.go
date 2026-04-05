@@ -63,15 +63,15 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	glog.Println("原始数据", tomlBytes)
-	frpsCfg := v1.ServerConfig{}
-	err = utils.TomlTextToObject(tomlBytes, &frpsCfg)
+	newFrpsCfg := v1.ServerConfig{}
+	err = utils.TomlTextToObject(tomlBytes, &newFrpsCfg)
 	if err != nil {
 		res.Error(fmt.Sprintf("配置失败：%v", err))
 		return
 	}
-	glog.Printf("对象数据:%+v", frpsCfg)
+	glog.Printf("对象数据:%+v", newFrpsCfg)
 	cfg := GetCfgModel()
-	cfg.Frps = frpsCfg
+	cfg.Frps = newFrpsCfg
 	glog.Printf("cfg:%+v", cfg)
 	//下载和接收的最新文件 名称为上传文件的原始名称
 	newBufferBytes, err := ukey.GenConfig(GetCfgBuffer(), false)
