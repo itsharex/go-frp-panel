@@ -11,8 +11,8 @@ require (
 	github.com/kardianos/service v1.2.4
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/spf13/cobra v1.8.0
-	github.com/xxl6097/glog v0.1.88
-	github.com/xxl6097/go-service v0.7.27
+	github.com/xxl6097/glog v0.1.91
+	github.com/xxl6097/go-service v0.7.28
 	go.uber.org/zap v1.27.1
 	golang.org/x/net v0.39.0
 	golang.org/x/text v0.24.0
