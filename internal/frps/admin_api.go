@@ -2,6 +2,13 @@ package frps
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/gorilla/mux"
@@ -12,12 +19,6 @@ import (
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/ukey"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 var logQueue = utils.NewLogQueue()
@@ -61,15 +62,17 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	//glog.Println(tomlBytes)
+	glog.Println("原始数据", tomlBytes)
 	frpsCfg := v1.ServerConfig{}
 	err = utils.TomlTextToObject(tomlBytes, &frpsCfg)
 	if err != nil {
 		res.Error(fmt.Sprintf("配置失败：%v", err))
 		return
 	}
+	glog.Printf("对象数据:%+v", frpsCfg)
 	cfg := GetCfgModel()
 	cfg.Frps = frpsCfg
+	glog.Printf("cfg:%+v", cfg)
 	//下载和接收的最新文件 名称为上传文件的原始名称
 	newBufferBytes, err := ukey.GenConfig(GetCfgBuffer(), false)
 	if err != nil {
