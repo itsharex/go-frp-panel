@@ -28,7 +28,7 @@ func init() {
 	//glog.Hook(func(bytes []byte) {
 	//	logQueue.AddMessage(string(bytes[2:]))
 	//})
-	z.Hook = func(entry zapcore.Entry) error {
+	z.GetLogConfig().Hook = func(entry zapcore.Entry) error {
 		time := entry.Time.Format(time.DateTime)
 		msg := entry.Message
 		lineNum := entry.Caller.Line

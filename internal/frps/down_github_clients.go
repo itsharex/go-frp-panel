@@ -10,12 +10,12 @@ import (
 )
 
 func (this *frps) checkFrpc() {
-	z.Debug("checkFrpc请求")
+	z.L().Info("checkFrpc请求")
 	github.Api().Request(pkg.GithubUser, pkg.GithubRepo)
 }
 
 func (this *frps) check() {
-	z.Error("开始检测客户端...")
+	z.L().Info("开始检测客户端...")
 	for {
 		this.checkFrpc()
 		time.Sleep(time.Hour * 8)

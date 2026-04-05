@@ -67,7 +67,7 @@ func (s *Service) OnVersion() string {
 
 func (this *Service) OnRun(i igs.Service) error {
 	//frps.Assert()
-	z.Printf("启动 %s %s\n", pkg.AppName, pkg.AppVersion)
+	z.L().Debug(fmt.Sprintf("启动 %s %s\n", pkg.AppName, pkg.AppVersion))
 	cfg := frps.GetCfgModel()
 	if cfg == nil {
 		return fmt.Errorf("程序配置文件未初始化")
