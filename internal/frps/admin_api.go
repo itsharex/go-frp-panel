@@ -12,21 +12,31 @@ import (
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/gorilla/mux"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
 	"github.com/xxl6097/go-frp-panel/internal/com/model"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/comm"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/ukey"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
+	"go.uber.org/zap/zapcore"
 )
 
 var logQueue = utils.NewLogQueue()
 
 func init() {
-	glog.Hook(func(bytes []byte) {
-		logQueue.AddMessage(string(bytes[2:]))
-	})
+	//glog.Hook(func(bytes []byte) {
+	//	logQueue.AddMessage(string(bytes[2:]))
+	//})
+	z.Hook = func(entry zapcore.Entry) error {
+		time := entry.Time.Format(time.DateTime)
+		msg := entry.Message
+		lineNum := entry.Caller.Line
+		filepath.Base(entry.Caller.File)
+		logs := fmt.Sprintf("%s %s:%d %s", time, filepath.Base(entry.Caller.File), lineNum, msg)
+		logQueue.AddMessage(logs)
+		return nil
+	}
 }
 
 // /api/shutdown
@@ -62,22 +72,22 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	glog.Println("原始数据", tomlBytes)
+	z.Println("原始数据", tomlBytes)
 	newFrpsCfg := v1.ServerConfig{}
 	err = utils.TomlTextToObject(tomlBytes, &newFrpsCfg)
 	if err != nil {
 		res.Error(fmt.Sprintf("配置失败：%v", err))
 		return
 	}
-	glog.Printf("对象数据:%+v", newFrpsCfg)
+	z.Printf("对象数据:%+v", newFrpsCfg)
 	cfg := GetCfgModel()
 	cfg.Frps = newFrpsCfg
-	glog.Printf("cfg:%+v", cfg)
+	z.Printf("cfg:%+v", cfg)
 	//下载和接收的最新文件 名称为上传文件的原始名称
 	newBufferBytes, err := ukey.GenConfig(GetCfgBuffer(), false)
 	if err != nil {
 		res.Error(fmt.Sprintf("gen config err: %v", err))
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 	if this.install != nil {
@@ -109,7 +119,7 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 //		}
 //		return
 //	}
-//	//glog.Println(tomlBytes)
+//	//z.Println(tomlBytes)
 //	frpsCfg := v1.ServerConfig{}
 //	err = utils.TomlTextToObject(tomlBytes, &frpsCfg)
 //	if err != nil {
@@ -127,7 +137,7 @@ func (this *frps) apiServerConfigSet(w http.ResponseWriter, r *http.Request) {
 //	newBufferBytes, err := ukey.GenConfig(GetCfgBuffer(), false)
 //	if err != nil {
 //		res.Error(fmt.Sprintf("gen config err: %v", err))
-//		glog.Error(res.Msg)
+//		z.Error(res.Msg)
 //		return
 //	}
 //	signFilePath, err := utils.SignAndInstall(newBufferBytes, ukey.GetBuffer(), filePath)
@@ -158,9 +168,9 @@ func (this *frps) apiRestart(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(time.Second)
 			err := this.install.Restart()
 			if err != nil {
-				glog.Error("重启失败")
+				z.Error("重启失败")
 			}
-			glog.Error("重启ok")
+			z.Error("重启ok")
 		}()
 	}
 }
@@ -194,7 +204,7 @@ func (this *frps) apiServerConfigGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	frpsToml := GetCfgModel().Frps
-	glog.Println("获取Frps配置:", frpsToml)
+	z.Println("获取Frps配置:", frpsToml)
 	res.Raw = utils.ObjectToTomlText(frpsToml)
 }
 
@@ -225,12 +235,12 @@ func (this *frps) apiBindInfo(w http.ResponseWriter, r *http.Request) {
 		n, e := strconv.Atoi(bindPort)
 		if e != nil {
 			res.Error(e.Error())
-			glog.Errorf("bind port [%s] err %v", bindPort, e)
+			z.Errorf("bind port [%s] err %v", bindPort, e)
 			return
 		}
 		//bindPort = strconv.Itoa(n)
 		port = n
-		glog.Debugf("bind port [%s] %v", bindPort, e)
+		z.Debugf("bind port [%s] %v", bindPort, e)
 	}
 	data := map[string]interface{}{
 		"bindPort": port,

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/glog/glog"
 	"github.com/xxl6097/go-frp-panel/internal/frpc"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/frp"
@@ -51,7 +50,7 @@ func main() {
 		},
 	}
 
-	glog.Infof("tcpProxy:%+v", tcpProxy)
+	z.Infof("tcpProxy:%+v", tcpProxy)
 	var proxies []v1.TypedProxyConfig
 	proxies = append(proxies, tcpProxy)
 
@@ -59,13 +58,13 @@ func main() {
 		ClientCommonConfig: *ccc,
 		Proxies:            proxies,
 	}
-	glog.Infof("ClientConfig:%+v", cfg)
+	z.Infof("ClientConfig:%+v", cfg)
 	frpc.SetCfgModel(&frpc.CfgModel{Frpc: *cfg})
 
 	err := frp.WriteFrpcMainConfigWithOut(cfg)
 	//err = frp.WriteFrpcMainConfig(cfg)
 	if err != nil {
-		glog.Warnf("write content to frpc config file error: %v", err)
+		z.Warnf("write content to frpc config file error: %v", err)
 	}
 
 	_ = ReadFrcMainConfigWithOut()

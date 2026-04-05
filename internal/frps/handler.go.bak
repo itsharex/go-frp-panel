@@ -57,28 +57,28 @@ func (c *frps) apiHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			response.Reject = true
 			response.RejectReason = err.Error()
-			glog.Printf("handle %s error: %v reqest: %+v\n", r.URL.Path, err, request.Op)
+			z.Printf("handle %s error: %v reqest: %+v\n", r.URL.Path, err, request.Op)
 		}
 		bb, e := json.Marshal(response)
 		if e != nil {
-			glog.Printf("【%s】Failed %v\n", request.Op, err)
+			z.Printf("【%s】Failed %v\n", request.Op, err)
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			//glog.Printf("【%s】Sucess %s\n", request.Op, string(bb))
+			//z.Printf("【%s】Sucess %s\n", request.Op, string(bb))
 			_, _ = w.Write(bb)
 		}
 	}()
 
 	if e1 != nil {
 		err = e1
-		glog.Errorf("bind json error: %v", e1)
+		z.Errorf("bind json error: %v", e1)
 		return
 	}
 
 	jsonStr, e := json.Marshal(request.Content)
 	if e != nil {
 		err = e
-		glog.Errorf("Marshal request.Content err: %v", e)
+		z.Errorf("Marshal request.Content err: %v", e)
 		return
 	}
 	var dataMap map[string]string
@@ -132,10 +132,10 @@ func (c *frps) apiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//bb, err := json.Marshal(response)
 	//if err != nil {
-	//	glog.Printf("【%s】Failed %v\n", request.Op, err)
+	//	z.Printf("【%s】Failed %v\n", request.Op, err)
 	//	w.WriteHeader(http.StatusInternalServerError)
 	//} else {
-	//	//glog.Printf("【%s】Sucess %s\n", request.Op, string(bb))
+	//	//z.Printf("【%s】Sucess %s\n", request.Op, string(bb))
 	//	w.Write(bb)
 	//}
 }
@@ -161,7 +161,7 @@ func (c *frps) JudgeToken(id string, token string) plugin.Response {
 }
 
 func (c *frps) JudgePort(id string, content *plugin.NewProxyContent) plugin.Response {
-	//glog.Debugf("JudgePort %+v", content.User)
+	//z.Debugf("JudgePort %+v", content.User)
 	var res plugin.Response
 	supportProxyTypes := []string{
 		"tcp", "tcpmux", "udp", "http", "https",

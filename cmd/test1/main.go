@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/xxl6097/glog/glog"
 	"reflect"
 )
 
@@ -40,7 +39,7 @@ func DynamicSelect[T any](t []T, fun func(T) T) T {
 func sender(ch chan int) {
 	for i := 0; i < 5; i++ {
 		ch <- i
-		glog.Printf("Sent %d to the channel\n", i)
+		z.Printf("Sent %d to the channel\n", i)
 	}
 	close(ch)
 }
@@ -50,9 +49,9 @@ func test1() {
 	go sender(ch)
 
 	for num := range ch {
-		glog.Printf("Received %d from the channel\n", num)
+		z.Printf("Received %d from the channel\n", num)
 	}
-	glog.Println("Channel is closed")
+	z.Println("Channel is closed")
 }
 func main() {
 	test1()

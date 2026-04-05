@@ -7,7 +7,8 @@ import (
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/util/version"
 	"github.com/kardianos/service"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
 	"github.com/xxl6097/go-frp-panel/internal/frps"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/comm/iface"
@@ -42,11 +43,11 @@ func (this *Service) OnFinish() {
 	}
 }
 func Bootstrap() {
-	defer glog.Flush()
+	//defer glog.Flush()
 	svr := &Service{}
 	err := gs.Run(svr)
 	if err != nil {
-		glog.Error("程序启动出错了", err)
+		z.Error("程序启动出错了", err)
 	}
 }
 
@@ -66,7 +67,7 @@ func (s *Service) OnVersion() string {
 
 func (this *Service) OnRun(i igs.Service) error {
 	//frps.Assert()
-	glog.Printf("启动 %s %s\n", pkg.AppName, pkg.AppVersion)
+	z.Printf("启动 %s %s\n", pkg.AppName, pkg.AppVersion)
 	cfg := frps.GetCfgModel()
 	if cfg == nil {
 		return fmt.Errorf("程序配置文件未初始化")
@@ -74,19 +75,19 @@ func (this *Service) OnRun(i igs.Service) error {
 	conf := frps.GetCfgModel().Frps
 	//content, err := json.Marshal(conf)
 	//if err != nil {
-	//	glog.Error(err)
+	//	z.Error(err)
 	//	return err
 	//}
 	//cfgConfig := &v1.ServerConfig{}
 	//err = json.Unmarshal(content, cfgConfig)
 	//if err != nil {
-	//	glog.Error(err)
+	//	z.Error(err)
 	//	return err
 	//}
 	//svv, err := frps2.NewFrps(cfgConfig, i)
 	svv, err := frps2.NewFrps(&conf, i)
 	if err != nil {
-		glog.Printf("启动 %s %s 失败:%v\n%v", pkg.AppName, pkg.AppVersion, err, conf)
+		z.Printf("启动 %s %s 失败:%v\n%v", pkg.AppName, pkg.AppVersion, err, conf)
 		return err
 	}
 	this.ifrps = svv
@@ -94,13 +95,13 @@ func (this *Service) OnRun(i igs.Service) error {
 	return err
 }
 
-func (this *Service) GetAny(binDir string) []byte {
+func (this *Service) GetAny(binDir string) ([]byte, []string) {
 	a := this.menu()
 	if a == nil {
-		return nil
+		return nil, nil
 	}
 	this.webServer = &a.Frps.WebServer
-	return a.Bytes()
+	return a.Bytes(), nil
 }
 
 func (this *Service) menu() *frps.CfgModel {
@@ -123,7 +124,7 @@ func (this *Service) menu() *frps.CfgModel {
 	if cfg.Frps.WebServer.Password == "" {
 		cfg.Frps.WebServer.Password = utils2.InputString("管理后台密码：")
 	}
-	temp := glog.AppHome("frps", "log")
+	temp := zutil.AppHome("frps", "log")
 	cfg.Frps.Log = v1.LogConfig{
 		To:      filepath.Join(temp, "frps.log"),
 		MaxDays: 3,

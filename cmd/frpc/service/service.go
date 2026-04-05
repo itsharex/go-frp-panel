@@ -2,9 +2,12 @@ package service
 
 import (
 	"fmt"
+	"path/filepath"
+
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/kardianos/service"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
 	"github.com/xxl6097/go-frp-panel/internal/frpc"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/frp"
@@ -13,7 +16,6 @@ import (
 	"github.com/xxl6097/go-service/pkg/gs"
 	"github.com/xxl6097/go-service/pkg/gs/igs"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"path/filepath"
 )
 
 type Service struct {
@@ -40,13 +42,13 @@ func (this *Service) OnFinish() {
 }
 
 func Bootstrap() {
-	defer glog.Flush()
+	//defer glog.Flush()
 	servs := Service{}
 	err := gs.Run(&servs)
 	if err != nil {
-		glog.Error("程序启动出错了", err)
+		z.Error("程序启动出错了", err)
 	}
-	//glog.Println("服务程序启动成功", os.Getegid())
+	//z.Println("服务程序启动成功", os.Getegid())
 }
 
 func (s *Service) OnConfig() *service.Config {
@@ -64,7 +66,7 @@ func (s *Service) OnVersion() string {
 
 func (this *Service) OnRun(i igs.Service) error {
 	//frpc.Assert()
-	glog.Printf("启动frpc_%s\n", pkg.AppVersion)
+	z.Printf("启动frpc_%s\n", pkg.AppVersion)
 	cfg := frpc.GetCfgModel()
 	if cfg == nil {
 		return fmt.Errorf("程序配置文件未初始化")
@@ -72,23 +74,27 @@ func (this *Service) OnRun(i igs.Service) error {
 	//svv, err := frpc.NewFrpc(i)
 	svv, err := frpc2.NewFrpc(i)
 	if err != nil {
-		glog.Error("启动frpc失败", err)
-		glog.Printf("启动frp_%s失败\n", pkg.AppVersion)
+		z.Error("启动frpc失败", err)
+		z.Printf("启动frp_%s失败\n", pkg.AppVersion)
 		return err
 	}
 	err = svv.Run()
 	return err
 }
 
-func (this *Service) GetAny(binDir string) []byte {
+func (this *Service) GetAny1(binDir string) []byte {
 	cfg := this.menu()
 	this.wsc = &cfg.Frpc.WebServer
 	err := frp.WriteFrpcMainConfigWithDir(binDir, cfg.Frpc)
 	if err != nil {
-		glog.Warnf("write content to frpc config file error: %v", err)
+		z.Warnf("write content to frpc config file error: %v", err)
 		return nil
 	}
 	return cfg.Bytes()
+}
+
+func (this *Service) GetAny(s string) ([]byte, []string) {
+	return this.GetAny1(s), nil
 }
 
 func (this *Service) menu() *frpc.CfgModel {
@@ -100,7 +106,7 @@ func (this *Service) menu() *frpc.CfgModel {
 		cfg = &cfm.Frpc
 	}
 	cfg.Log = v1.LogConfig{
-		To:      filepath.Join(glog.AppHome("frpc", "log"), "frpc.log"),
+		To:      filepath.Join(zutil.AppHome("frpc", "log"), "frpc.log"),
 		MaxDays: 7,
 		Level:   "error",
 	}

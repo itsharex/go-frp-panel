@@ -4,13 +4,14 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
-	"github.com/xxl6097/glog/glog"
-	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/xxl6097/glog/pkg/z"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 func WriteAppend(filePath string, content []byte) error {
@@ -76,10 +77,10 @@ func Delete(filePath string, args ...string) {
 		title = args[0]
 	}
 	if err := os.Remove(filePath); err != nil {
-		glog.Infof("%s 文件删除失败: %s,%v\n", title, filePath, err)
+		z.Infof("%s 文件删除失败: %s,%v\n", title, filePath, err)
 		return
 	}
-	glog.Infof("%s 文件删除成功: %s\n", title, filePath)
+	z.Infof("%s 文件删除成功: %s\n", title, filePath)
 }
 
 func IsDirectoryExist(dirPath string) bool {
@@ -432,7 +433,7 @@ func IsDirEmpty(dirPath string) (bool, error) {
 func GetUserDir() (string, error) {
 	binpath, err := os.Executable()
 	if err != nil {
-		glog.Error(binpath, err)
+		z.Error(binpath, err)
 		return "", err
 	}
 

@@ -3,8 +3,6 @@ package sse
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/xxl6097/glog/glog"
-	"github.com/xxl6097/go-frp-panel/pkg/comm/iface"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +10,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/go-frp-panel/pkg/comm/iface"
 )
 
 // SSEServer 管理所有客户端连接和事件广播
@@ -43,7 +44,7 @@ func (s *SSEServer) SetSSECallBack(back iface.OnSSECallBack) {
 // defaultClientIDFunc 默认的客户端ID生成函数
 func defaultClientIDFunc(r *http.Request) string {
 	level := r.URL.Query().Get("type")
-	glog.Infof("sse新连接 %s %v", r.URL.Path, level)
+	z.Infof("sse新连接 %s %v", r.URL.Path, level)
 	if level != "" {
 		return fmt.Sprintf("%s-%s-%d", level, r.RemoteAddr, time.Now().UnixNano())
 	}
@@ -160,7 +161,7 @@ func (s *SSEServer) run() {
 		case client := <-s.register:
 			s.mu.Lock()
 			s.clients[client.SseId] = client
-			glog.Debugf("register:%s,%p", client.SseId, s.callback)
+			z.Debugf("register:%s,%p", client.SseId, s.callback)
 			if s.callback != nil {
 				s.callback.OnSseNewConnection(client)
 			}
@@ -168,7 +169,7 @@ func (s *SSEServer) run() {
 		case client := <-s.unregister:
 			s.mu.Lock()
 			if _, ok := s.clients[client.SseId]; ok {
-				glog.Error("unregister client id:", client.SseId)
+				z.Error("unregister client id:", client.SseId)
 				if s.callback != nil {
 					s.callback.OnSseDisconnect(client)
 				}
@@ -297,9 +298,9 @@ func test() {
 
 	// 启动HTTP服务器
 	go func() {
-		glog.Println("SSEServer started on :8080")
+		z.Println("SSEServer started on :8080")
 		if err := http.ListenAndServe(":8080", nil); err != nil {
-			glog.Fatalf("SSEServer error: %v", err)
+			z.Fatalf("SSEServer error: %v", err)
 		}
 	}()
 
@@ -308,10 +309,10 @@ func test() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	glog.Println("Shutting down server...")
+	z.Println("Shutting down server...")
 	// 关闭所有客户端连接
 	for _, clientID := range server.GetClientIDs() {
 		server.CloseClient(clientID)
 	}
-	glog.Println("SSEServer gracefully shutdown")
+	z.Println("SSEServer gracefully shutdown")
 }

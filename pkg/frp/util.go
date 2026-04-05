@@ -3,17 +3,18 @@ package frp
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
 	"github.com/xxl6097/go-frp-panel/internal/com/model"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/github"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func WriteFrpToml(cfgFilePath string, data any) error {
 		if err := os.WriteFile(cfgFilePath, utils.ObjectToTomlText(data), 0o600); err != nil {
 			return fmt.Errorf("write content to frpc config file error: %v", err)
 		} else {
-			glog.Infof("write file success %s", cfgFilePath)
+			z.Infof("write file success %s", cfgFilePath)
 			return nil
 		}
 	}
@@ -61,7 +62,7 @@ func ReadFrpToml(cfgFileName string) ([]byte, error) {
 func WriteFrpcMainConfig(data any) error {
 	dir, err := GetFrpcTomlDir()
 	if err != nil {
-		glog.Error("os.Executable() error", err)
+		z.Error("os.Executable() error", err)
 		return err
 	}
 	return WriteFrpcMainConfigWithDir(dir, data)
@@ -83,7 +84,7 @@ func WriteFrpcMainConfigWithDir(dir string, data any) error {
 func WriteFrpcMainConfigWithOut(data any) error {
 	dir, err := GetFrpcTomlDir()
 	if err != nil {
-		glog.Error("os.Executable() error", err)
+		z.Error("os.Executable() error", err)
 		return err
 	}
 	cfgPath := filepath.Join(dir, GetFrpcMainTomlFileName())
@@ -101,7 +102,7 @@ func GetFrpcMainTomlFileName() string {
 func GetFrpcMainTomlFilePath() (string, error) {
 	dir, err := GetFrpcTomlDir()
 	if err != nil {
-		glog.Error("os.Executable() error", err)
+		z.Error("os.Executable() error", err)
 		return "", err
 	}
 	cfgPath := filepath.Join(dir, GetFrpcMainTomlFileName())
@@ -165,7 +166,7 @@ func EncodeSecret(obj *model.FrpcBuffer) (string, error) {
 		return "", fmt.Errorf("obj is nil")
 	}
 
-	glog.Debugf("EncodeSecret obj: %+v", obj)
+	z.Debugf("EncodeSecret obj: %+v", obj)
 	data, err := json.Marshal(obj)
 	if err != nil {
 		return "", fmt.Errorf("json marshal err: %v", err)
@@ -174,7 +175,7 @@ func EncodeSecret(obj *model.FrpcBuffer) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("gzip compress err: %v", err)
 	}
-	//glog.Println(string(data))
+	//z.Println(string(data))
 	return utils.Encrypt(buffer, nil), nil
 }
 
@@ -200,7 +201,7 @@ func DecodeSecret(text string) *model.FrpcBuffer {
 	}
 	buffer, err := utils2.GzipDecompress([]byte(jsonString))
 	if err != nil {
-		glog.Errorf("gzip decompress err: %v", err)
+		z.Errorf("gzip decompress err: %v", err)
 		return nil
 	}
 	var obj model.FrpcBuffer
@@ -208,7 +209,7 @@ func DecodeSecret(text string) *model.FrpcBuffer {
 	if err != nil {
 		return nil
 	}
-	//glog.Debugf("%+v", obj)
+	//z.Debugf("%+v", obj)
 	return &obj
 }
 

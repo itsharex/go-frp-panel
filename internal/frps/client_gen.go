@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+
 	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
 	model2 "github.com/xxl6097/go-frp-panel/internal/com/model"
 	"github.com/xxl6097/go-frp-panel/pkg/frp"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/github"
 	"github.com/xxl6097/go-service/pkg/ukey"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
 )
 
 func (this *frps) createConfigData(body *model2.ConfigBodyData) error {
@@ -106,7 +108,7 @@ func (this *frps) getData(r *http.Request) (*model2.ConfigBodyData, error) {
 	if e != nil {
 		return nil, e
 	}
-	glog.Infof("data:%+v", body)
+	z.Infof("data:%+v", body)
 	e = this.createConfigData(body)
 	if e != nil {
 		return nil, e
@@ -118,7 +120,7 @@ func (this *frps) apiCreateFrpcToml(w http.ResponseWriter, r *http.Request) {
 	var e error
 	defer func() {
 		if e != nil {
-			glog.Error(e)
+			z.Error(e)
 			http.Error(w, e.Error(), http.StatusInternalServerError)
 		}
 	}()
@@ -148,7 +150,7 @@ func (this *frps) apiCreateFrpcByUpload(w http.ResponseWriter, r *http.Request) 
 	var e error
 	defer func() {
 		if e != nil {
-			glog.Error(e)
+			z.Error(e)
 			http.Error(w, e.Error(), http.StatusInternalServerError)
 		}
 	}()
@@ -157,7 +159,7 @@ func (this *frps) apiCreateFrpcByUpload(w http.ResponseWriter, r *http.Request) 
 		e = err
 		return
 	}
-	glog.Infof("body:%+v", body)
+	z.Infof("body:%+v", body)
 	err = r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		e = fmt.Errorf("ParseMultipartForm error %v", err)
@@ -171,9 +173,9 @@ func (this *frps) apiCreateFrpcByUpload(w http.ResponseWriter, r *http.Request) 
 	}
 	defer file.Close()
 
-	glog.Info(handler.Filename)
+	z.Info(handler.Filename)
 
-	binPath := filepath.Join(glog.AppHome("temp"), handler.Filename)
+	binPath := filepath.Join(zutil.AppHome("temp"), handler.Filename)
 	dst, err := os.Create(binPath)
 	if err != nil {
 		e = fmt.Errorf("create file %s error: %v", handler.Filename, err)
@@ -188,7 +190,7 @@ func (this *frps) apiCreateFrpcByUpload(w http.ResponseWriter, r *http.Request) 
 		e = fmt.Errorf("io.CopyBuffer error: %v", err)
 		return
 	}
-	glog.Info("上传成功", binPath)
+	z.Info("上传成功", binPath)
 	e = this.serveFile(binPath, body, w, r)
 }
 
@@ -196,7 +198,7 @@ func (this *frps) apiCreateFrpcByUrl(w http.ResponseWriter, r *http.Request) {
 	var e error
 	defer func() {
 		if e != nil {
-			glog.Error(e)
+			z.Error(e)
 			http.Error(w, e.Error(), http.StatusInternalServerError)
 		}
 	}()
@@ -205,7 +207,7 @@ func (this *frps) apiCreateFrpcByUrl(w http.ResponseWriter, r *http.Request) {
 		e = err
 		return
 	}
-	glog.Infof("body:%+v", body)
+	z.Infof("body:%+v", body)
 	if utils2.IsURL(body.BinAddress) {
 		proxyUrls := github.Api().GetProxyUrls(body.BinAddress)
 		if proxyUrls != nil {
@@ -229,7 +231,7 @@ func (this *frps) apiCreateFrpcByUrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (this *frps) serveFile(filePath string, body *model2.ConfigBodyData, w http.ResponseWriter, r *http.Request) error {
-	glog.Infof("filePath: %s %+v\n", filePath, body)
+	z.Infof("filePath: %s %+v\n", filePath, body)
 	tpl, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("打开文件失败：%v", err)
@@ -248,13 +250,13 @@ func (this *frps) serveFile(filePath string, body *model2.ConfigBodyData, w http
 
 	cfgBuffer := bytes.Repeat([]byte{byte(ukey.B)}, len(ukey.GetBuffer()))
 	ccb := body.ClientConfigBytes()
-	glog.Infof("ClientConfig: %+v", body.ClientConfig)
+	z.Infof("ClientConfig: %+v", body.ClientConfig)
 	cfgNewBytes, err := ukey.GenConfig(ccb, false)
 	if err != nil {
 		return fmt.Errorf("文件签名失败：%v", err)
 
 	}
-	dstFile := filepath.Join(glog.AppHome("temp", utils2.GetID()), fileName)
+	dstFile := filepath.Join(zutil.AppHome("temp", utils2.GetID()), fileName)
 	outFile, err := os.Create(dstFile)
 	if err != nil {
 		_ = utils2.DeleteAllDirector(dstFile)

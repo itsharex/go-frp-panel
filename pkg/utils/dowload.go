@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/xxl6097/glog/glog"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/xxl6097/glog/pkg/z"
 )
 
 // ProgressWriter 自定义进度写入器结构体
@@ -28,7 +29,7 @@ func (pw *ProgressWriter) Write(p []byte) (int, error) {
 	progress := float64(pw.Written) / float64(pw.TotalSize) * 100
 	// 使用 \r 覆盖当前行，实现进度动态更新
 	if progress >= pw.Progress {
-		glog.Printf("%s %.2f%%\n", pw.Title, progress)
+		z.Printf("%s %.2f%%\n", pw.Title, progress)
 		pw.Progress = progress
 		pw.Progress += 5
 	}

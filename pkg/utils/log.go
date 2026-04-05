@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/xxl6097/glog/glog"
 	"net/http"
 	"sync"
+
+	"github.com/xxl6097/glog/pkg/z"
 )
 
 // LogQueue 定义日志队列
@@ -49,7 +50,7 @@ func (q *LogQueue) UnregisterClient(client chan string) {
 	defer q.mu.Unlock()
 	close(client)
 	delete(q.clients, client)
-	glog.Debug("UnregisterClient", client)
+	z.Debug("UnregisterClient", client)
 }
 
 // SseHandler 处理函数
@@ -67,7 +68,7 @@ func SseHandler(queue *LogQueue) http.HandlerFunc {
 			return
 		}
 
-		glog.Infof("sse客户端上线 %+v", r.RemoteAddr)
+		z.Infof("sse客户端上线 %+v", r.RemoteAddr)
 		// 为客户端创建一个消息通道
 		client := make(chan string)
 		queue.RegisterClient(client)
@@ -114,7 +115,7 @@ func SseHandler(queue *LogQueue) http.HandlerFunc {
 				_, _ = fmt.Fprintf(w, "data: %s\n", message)
 				flusher.Flush()
 				//case <-r.Context().Done():
-				//	glog.Warnf("sse客户端断线 %+v", r.RemoteAddr)
+				//	z.Warnf("sse客户端断线 %+v", r.RemoteAddr)
 				//	return
 			}
 		}

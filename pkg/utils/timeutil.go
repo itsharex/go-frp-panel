@@ -8,7 +8,7 @@ func GetTime() string {
 	// 加载时区信息，这里以 Asia/Shanghai 为例
 	//loc, err := time.LoadLocation("Asia/Shanghai")
 	//if err != nil {
-	//	glog.Error("加载时区信息出错:", err)
+	//	z.Error("加载时区信息出错:", err)
 	//	return ""
 	//}
 	// 获取当前时间并设置时区
@@ -25,7 +25,7 @@ func GetFileNameByTime() string {
 	// 加载时区信息，这里以 Asia/Shanghai 为例
 	//loc, err := time.LoadLocation("Asia/Shanghai")
 	//if err != nil {
-	//	glog.Error("加载时区信息出错:", err)
+	//	z.Error("加载时区信息出错:", err)
 	//	return ""
 	//}
 	// 获取当前时间并设置时区

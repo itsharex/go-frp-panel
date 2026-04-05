@@ -1,19 +1,20 @@
 package frps
 
 import (
+	"net/http"
+
 	httppkg "github.com/fatedier/frp/pkg/util/http"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/zutil"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/gs"
-	"net/http"
 )
 
 func (this *frps) adminHandlers(helper *httppkg.RouterRegisterHelper) {
 	subRouter := helper.Router.NewRoute().Name("admin").Subrouter()
 	subRouter.Use(helper.AuthMiddleware)
 	staticPrefix := "/log/"
-	baseDir := glog.AppHome()
+	baseDir := zutil.AppHome()
 	subRouter.PathPrefix(staticPrefix).Handler(http.StripPrefix(staticPrefix, http.FileServer(http.Dir(baseDir))))
 
 	subRouter.PathPrefix("/fserver/").Handler(http.StripPrefix("/fserver/", http.FileServer(http.Dir("/"))))

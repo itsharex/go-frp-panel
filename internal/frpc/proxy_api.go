@@ -2,16 +2,17 @@ package frpc
 
 import (
 	"fmt"
-	"github.com/xxl6097/glog/glog"
-	"github.com/xxl6097/go-frp-panel/pkg/comm"
-	"github.com/xxl6097/go-frp-panel/pkg/utils"
-	utils2 "github.com/xxl6097/go-service/pkg/utils"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/go-frp-panel/pkg/comm"
+	"github.com/xxl6097/go-frp-panel/pkg/utils"
+	utils2 "github.com/xxl6097/go-service/pkg/utils"
 )
 
 func (this *frpc) apiProxyTCPAdd(w http.ResponseWriter, r *http.Request) {
@@ -148,8 +149,8 @@ func (this *frpc) apiProxyPorts(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		data := utils.ScanPorts(localIP, 0, 65535)
 		end := time.Now()
-		glog.Println("扫描耗时", end.Sub(start))
-		glog.Println("端口数量", len(data))
+		z.Println("扫描耗时", end.Sub(start))
+		z.Println("端口数量", len(data))
 		return data
 	})
 	if len(arr) == 0 {
@@ -188,5 +189,5 @@ func (this *frpc) apiProxyGithubApi(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res.Ok("设置成功～")
 	}
-	glog.Debug("设置GITHUB_API_PROXY", err)
+	z.Debug("设置GITHUB_API_PROXY", err)
 }

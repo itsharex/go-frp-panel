@@ -2,26 +2,42 @@ package frpc
 
 import (
 	httppkg "github.com/fatedier/frp/pkg/util/http"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/gs"
+	"go.uber.org/zap/zapcore"
+
+	"fmt"
 	"net/http"
+	"path/filepath"
+	"time"
 )
 
 var logQueue = utils.NewLogQueue()
 
 func init() {
-	glog.Hook(func(bytes []byte) {
-		logQueue.AddMessage(string(bytes[2:]))
-	})
+	//glog.Hook(func(bytes []byte) {
+	//	logQueue.AddMessage(string(bytes[2:]))
+	//})
+
+	z.Hook = func(entry zapcore.Entry) error {
+		time := entry.Time.Format(time.DateTime)
+		msg := entry.Message
+		lineNum := entry.Caller.Line
+		filepath.Base(entry.Caller.File)
+		logs := fmt.Sprintf("%s %s:%d %s", time, filepath.Base(entry.Caller.File), lineNum, msg)
+		logQueue.AddMessage(logs)
+		return nil
+	}
 }
 
 func (this *frpc) adminHandlers(helper *httppkg.RouterRegisterHelper) {
 	subRouter := helper.Router.NewRoute().Name("admin").Subrouter()
 	subRouter.Use(helper.AuthMiddleware)
 	staticPrefix := "/log/"
-	baseDir := glog.AppHome()
+	baseDir := zutil.AppHome()
 	subRouter.PathPrefix(staticPrefix).Handler(http.StripPrefix(staticPrefix, http.FileServer(http.Dir(baseDir))))
 
 	subRouter.PathPrefix("/fserver/").Handler(http.StripPrefix("/fserver/", http.FileServer(http.Dir("/"))))

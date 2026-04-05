@@ -2,7 +2,6 @@ package frpc
 
 import (
 	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/glog/glog"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/ukey"
 )
@@ -18,7 +17,7 @@ func (this *CfgModel) Bytes() []byte {
 	return utils.ObjectToTomlText(this)
 }
 func load() error {
-	defer glog.Flush()
+	//defer glog.Flush()
 	byteArray, err := ukey.Load()
 	if err != nil {
 		return err

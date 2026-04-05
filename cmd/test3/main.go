@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/xxl6097/glog/glog"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 )
 
@@ -10,7 +9,7 @@ import (
 func main() {
 
 	body, err := utils.GithubApiReqest()
-	glog.Debug(body, err)
+	z.Debug(body, err)
 	name := "acfrps_v0.1.91_windows_amd64.exe"
 	result := utils.SplitLastTwoByUnderscore(name)
 	fmt.Printf("%-30s => %v\n", name, result)

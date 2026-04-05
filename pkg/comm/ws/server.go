@@ -2,10 +2,11 @@ package ws
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/xxl6097/glog/glog"
-	"github.com/xxl6097/go-frp-panel/pkg/comm/iface"
 	"net/http"
+
+	"github.com/gorilla/websocket"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/go-frp-panel/pkg/comm/iface"
 )
 
 // upgrader 用于升级HTTP连接到WebSocket连接
@@ -98,10 +99,10 @@ func (this *FrpWebSocket) onMessageRecv(ws *websocket.Conn, r *http.Request) {
 		messageType, message, err := ws.ReadMessage()
 		if err != nil {
 			pointAddress := fmt.Sprintf("%p", ws)
-			glog.Errorf("websocket断开:%v,address:%v,messageType:%v,err:%v", ws.RemoteAddr().String(), pointAddress, messageType, err)
+			z.Errorf("websocket断开:%v,address:%v,messageType:%v,err:%v", ws.RemoteAddr().String(), pointAddress, messageType, err)
 			break
 		} else {
-			//glog.Printf("Received:%+v %+v\n", ws.RemoteAddr().String(), messageType)
+			//z.Printf("Received:%+v %+v\n", ws.RemoteAddr().String(), messageType)
 			if this.callback != nil {
 				this.callback.OnServerWebSocketMessageReceive(messageType, message)
 			}
@@ -111,7 +112,7 @@ func (this *FrpWebSocket) onMessageRecv(ws *websocket.Conn, r *http.Request) {
 
 // HandleConnections 处理WebSocket连接
 func (this *FrpWebSocket) HandleConnections(w http.ResponseWriter, r *http.Request) {
-	glog.Debugf("WebSocket请求：%+v", *r)
+	z.Debugf("WebSocket请求：%+v", *r)
 	for key, values := range r.Header {
 		fmt.Printf("Header[%q] = %q\n", key, values)
 		// 若需处理单个值，可以遍历 values 切片
@@ -128,7 +129,7 @@ func (this *FrpWebSocket) HandleConnections(w http.ResponseWriter, r *http.Reque
 	secKey := r.Header.Get("WebSocketID")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		glog.Error("websocket连接错误", ws, err)
+		z.Error("websocket连接错误", ws, err)
 		_ = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("websocket连接错误：%+v", err)))
 		return
 	}
@@ -136,17 +137,17 @@ func (this *FrpWebSocket) HandleConnections(w http.ResponseWriter, r *http.Reque
 
 	if id == "" {
 		//w.WriteHeader(http.StatusBadRequest)
-		glog.Errorf("ClientID空：%+v", r)
+		z.Errorf("ClientID空：%+v", r)
 		//return
 		_ = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ClientID空：%+v", r)))
 	}
 	if secKey == "" {
 		//w.WriteHeader(http.StatusBadRequest)
-		glog.Errorf("WebSocketID空：%+v", r)
+		z.Errorf("WebSocketID空：%+v", r)
 		//return
 		_ = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("WebSocketID空：%+v", r)))
 	}
-	glog.Warn("websocket客户端连接成功", secKey, localMacAddress, localIpv4, id)
+	z.Warn("websocket客户端连接成功", secKey, localMacAddress, localIpv4, id)
 	childMap := this.clients[id]
 	defer func() {
 		session := childMap[secKey]
@@ -168,9 +169,9 @@ func (this *FrpWebSocket) HandleConnections(w http.ResponseWriter, r *http.Reque
 	}
 
 	//for k, v := range this.clients {
-	//	glog.Warnf("websocket %s %+v", k, v)
+	//	z.Warnf("websocket %s %+v", k, v)
 	//	for kk, vv := range v {
-	//		glog.Warnf("%s %+v", kk, vv)
+	//		z.Warnf("%s %+v", kk, vv)
 	//	}
 	//}
 	this.onMessageRecv(ws, r)

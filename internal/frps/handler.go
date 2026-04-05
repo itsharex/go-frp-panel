@@ -2,14 +2,15 @@ package frps
 
 import (
 	"encoding/json"
+	"log"
+	"net/http"
+
 	plugin "github.com/fatedier/frp/pkg/plugin/server"
 	httppkg "github.com/fatedier/frp/pkg/util/http"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
 	"github.com/xxl6097/go-frp-panel/internal/com/model"
 	"github.com/xxl6097/go-frp-panel/pkg/frp"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
-	"log"
-	"net/http"
 )
 
 type HTTPError struct {
@@ -66,16 +67,16 @@ func (c *frps) apiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		glog.Printf("handle %s error: %v\n", r.URL.Path, err)
+		z.Printf("handle %s error: %v\n", r.URL.Path, err)
 		response.RejectReason = err.Error()
 		response.Reject = true
 	}
 	bb, err := json.Marshal(response)
 	if err != nil {
-		glog.Printf("【%s】Failed %v\n", request.Op, err)
+		z.Printf("【%s】Failed %v\n", request.Op, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		//glog.Printf("【%s】Sucess %s\n", request.Op, string(bb))
+		//z.Printf("【%s】Sucess %s\n", request.Op, string(bb))
 		w.Write(bb)
 	}
 }

@@ -4,6 +4,13 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"io/fs"
+	"path"
+	"path/filepath"
+	"slices"
+	"strings"
+	"time"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/fatedier/frp/client"
 	"github.com/fatedier/frp/client/proxy"
@@ -11,16 +18,11 @@ import (
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/config/v1/validation"
 	"github.com/fatedier/frp/pkg/util/log"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
 	"github.com/xxl6097/go-frp-panel/pkg/frp"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"io/fs"
-	"path"
-	"path/filepath"
-	"slices"
-	"strings"
-	"time"
 )
 
 func (this *frpc) retry(cfgPath string) {
@@ -29,7 +31,7 @@ func (this *frpc) retry(cfgPath string) {
 	}, retry.Delay(time.Second*5), retry.Attempts(0))
 
 	if err != nil {
-		glog.Error("启动失败", err)
+		z.Error("启动失败", err)
 	}
 }
 
@@ -48,15 +50,15 @@ func (this *frpc) runMultipleClients(cfgDir string) {
 		time.Sleep(time.Millisecond)
 		err = this.newClient(path)
 		if err != nil {
-			glog.Errorf("创建客户端【%s】失败:%v", d.Name(), err)
+			z.Errorf("创建客户端【%s】失败:%v", d.Name(), err)
 			go this.retry(path)
 		} else {
-			glog.Infof("创建客户端【%s】成功", d.Name())
+			z.Infof("创建客户端【%s】成功", d.Name())
 		}
 		return err
 	})
 	if err != nil {
-		glog.Error(err)
+		z.Error(err)
 	}
 }
 
@@ -68,7 +70,7 @@ func (this *frpc) startService(
 ) error {
 	cfg.WebServer = v1.WebServerConfig{}
 	if cfg.Log.To == "" {
-		temp := filepath.Join(glog.AppHome(), cfg.User, "app.log")
+		temp := filepath.Join(zutil.AppHome(), cfg.User, "app.log")
 		cfg.Log = v1.LogConfig{
 			To:      temp,
 			MaxDays: 7,
@@ -102,7 +104,7 @@ func (this *frpc) startService(
 	name := path.Base(cfgFile)
 	this.svrs[name] = &fc
 	decodeConfigAndRunWebSocket(this, &fc)
-	glog.Debug("创建frpc客户端", name)
+	z.Debug("创建frpc客户端", name)
 	shouldGracefulClose := cfg.Transport.Protocol == "kcp" || cfg.Transport.Protocol == "quic"
 	// Capture the exit signal if we use kcp or quic.
 	if shouldGracefulClose {
@@ -112,7 +114,7 @@ func (this *frpc) startService(
 	//e := retry.Do(func() error {
 	//	e := svr.Run(context.Background())
 	//	if e != nil {
-	//		glog.Errorf("创建frpc客户端失败: %s %v\n", cfgFile, e)
+	//		z.Errorf("创建frpc客户端失败: %s %v\n", cfgFile, e)
 	//	}
 	//	return e
 	//}, retry.Delay(time.Second*5), retry.Attempts(10))
@@ -120,7 +122,7 @@ func (this *frpc) startService(
 	fc.err = nil
 	e := svr.Run(context.Background())
 	if e != nil {
-		glog.Errorf("[%s]创建客户端失败: %v\n", name, e)
+		z.Errorf("[%s]创建客户端失败: %v\n", name, e)
 		fc.err = e
 	}
 	//因为Run是阻塞的，能执行到这一行，说明失败了
@@ -130,7 +132,7 @@ func (this *frpc) startService(
 
 func (this *frpc) deleteClient(cfgFilePath string) error {
 	name := path.Base(cfgFilePath)
-	glog.Debug("delete", name)
+	z.Debug("delete", name)
 	cls := this.svrs[name]
 	if cls == nil {
 		return fmt.Errorf("can't find client")
@@ -148,7 +150,7 @@ func (this *frpc) deleteClient(cfgFilePath string) error {
 
 func (this *frpc) statusClient(cfgFilePath string) (map[string][]client.ProxyStatusResp, error) {
 	name := path.Base(cfgFilePath)
-	glog.Debug("status frpc", name)
+	z.Debug("status frpc", name)
 	cls := this.svrs[name]
 	if cls == nil {
 		return nil, fmt.Errorf("客户端未创建")
@@ -162,7 +164,7 @@ func (this *frpc) statusClient(cfgFilePath string) (map[string][]client.ProxySta
 	}
 	ctl, err := utils.GetPointerInstance[client.Control]("ctl", svr)
 	if err != nil {
-		glog.Debug("GetPointerInstance[client.Control] err", err)
+		z.Debug("GetPointerInstance[client.Control] err", err)
 		return nil, err
 	}
 	if ctl == nil {
@@ -170,7 +172,7 @@ func (this *frpc) statusClient(cfgFilePath string) (map[string][]client.ProxySta
 	}
 	pm, err := utils.GetPointerInstance[proxy.Manager]("pm", ctl)
 	if err != nil {
-		glog.Debug("GetPointerInstance[proxy.Manager] err", err)
+		z.Debug("GetPointerInstance[proxy.Manager] err", err)
 		return nil, err
 	}
 	if pm == nil {
@@ -181,7 +183,7 @@ func (this *frpc) statusClient(cfgFilePath string) (map[string][]client.ProxySta
 		res client.StatusResp = make(map[string][]client.ProxyStatusResp)
 	)
 	ps := pm.GetAllProxyStatus()
-	glog.Debug("GetAllProxyStatus", len(ps))
+	z.Debug("GetAllProxyStatus", len(ps))
 	for _, status := range ps {
 		res[status.Type] = append(res[status.Type], client.NewProxyStatusResp(status, cls.cfg.ServerAddr))
 	}
@@ -196,7 +198,7 @@ func (this *frpc) statusClient(cfgFilePath string) (map[string][]client.ProxySta
 	}
 	//buf, err = json.Marshal(&res)
 	//if err != nil {
-	//	glog.Errorf("json error: %v", err)
+	//	z.Errorf("json error: %v", err)
 	//	return nil, err
 	//}
 	//return buf, nil
@@ -205,7 +207,7 @@ func (this *frpc) statusClient(cfgFilePath string) (map[string][]client.ProxySta
 
 func (this *frpc) updateClient(cfgFilePath string) error {
 	name := path.Base(cfgFilePath)
-	glog.Debug("update clilent", cfgFilePath)
+	z.Debug("update clilent", cfgFilePath)
 	cls := this.svrs[name]
 	if cls == nil {
 		return fmt.Errorf("can't find client [%+v]", this.svrs)
@@ -250,12 +252,12 @@ func (this *frpc) upgradeMainConfig() error {
 	if err := svr.UpdateAllConfigurer(proxyCfgs, visitorCfgs); err != nil {
 		return fmt.Errorf("update frpc proxy config error: %v", err)
 	}
-	glog.Infof("success reload conf")
+	z.Infof("success reload conf")
 	return nil
 }
 
 func (this *frpc) getTcpProxyArray(name string) []int {
-	glog.Debug("info frpc", name)
+	z.Debug("info frpc", name)
 	var cls *frpClient
 	if name == "" {
 		cls = this.mainFrpcClient
@@ -297,7 +299,7 @@ func (this *frpc) newClient(cfgFilePath string) error {
 		fmt.Printf("WARNING: %v\n", warning)
 	}
 	if err != nil {
-		glog.Errorf("配置文件校验失败: %s %v\n", cfgFilePath, err)
+		z.Errorf("配置文件校验失败: %s %v\n", cfgFilePath, err)
 		return err
 	}
 	e, _ := utils2.BlockingFunction[error](context.Background(), time.Second*3, func() error {
@@ -305,6 +307,6 @@ func (this *frpc) newClient(cfgFilePath string) error {
 	})
 	if e == nil {
 	}
-	glog.Warnf("运行客户端: %s %v\n", cfgFilePath, e)
+	z.Warnf("运行客户端: %s %v\n", cfgFilePath, e)
 	return e
 }

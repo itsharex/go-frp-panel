@@ -8,17 +8,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatedier/frp/pkg/util/version"
-	"github.com/xxl6097/go-frp-panel/pkg"
 	"math"
 	"net/http"
 	"os"
 	"reflect"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 	"unsafe"
+
+	"github.com/fatedier/frp/pkg/util/version"
+	"github.com/xxl6097/go-frp-panel/pkg"
 )
 
 var (
@@ -238,39 +238,6 @@ func IsLinux() bool {
 		return true
 	}
 	return false
-}
-
-func SplitVersion(v string) []string {
-	// 去除前缀标识（如 "v1.2.3" → "1.2.3"）
-	v = strings.TrimLeft(v, "v")
-	return strings.Split(v, ".")
-}
-
-// CompareVersions 0:相等；1：v1>v2;-1:v1<v2
-func CompareVersions(v1, v2 string) int {
-	seg1 := SplitVersion(v1)
-	seg2 := SplitVersion(v2)
-	maxLen := int(math.Max(float64(len(seg1)), float64(len(seg2))))
-
-	for i := 0; i < maxLen; i++ {
-		num1 := getSegmentValue(seg1, i)
-		num2 := getSegmentValue(seg2, i)
-
-		if num1 > num2 {
-			return 1 // v1 > v2
-		} else if num1 < num2 {
-			return -1 // v1 < v2
-		}
-	}
-	return 0 // 相等
-}
-
-func getSegmentValue(seg []string, idx int) int {
-	if idx >= len(seg) {
-		return 0 // 自动补零处理长度不一致情况
-	}
-	num, _ := strconv.Atoi(seg[idx])
-	return num
 }
 
 func GetVersionByFileName(filename string) string {

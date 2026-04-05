@@ -3,9 +3,6 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"github.com/xxl6097/glog/glog"
-	"golang.org/x/net/icmp"
-	"golang.org/x/net/ipv4"
 	"net"
 	"net/http"
 	"net/url"
@@ -16,18 +13,22 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/xxl6097/glog/pkg/z"
+	"golang.org/x/net/icmp"
+	"golang.org/x/net/ipv4"
 )
 
 func isURLFormatValid(urlStr string) bool {
 	// 严格解析绝对 URL
 	if _, err := url.ParseRequestURI(urlStr); err != nil {
-		glog.Errorf("isURLFormatValid: ParseRequestURI error: %v, %v", err, urlStr)
+		z.Errorf("isURLFormatValid: ParseRequestURI error: %v, %v", err, urlStr)
 		return false
 	}
 	// 提取协议和主机名
 	parsed, err := url.Parse(urlStr)
 	if err != nil {
-		glog.Errorf("isURLFormatValid: Parse error: %v, %v", err, urlStr)
+		z.Errorf("isURLFormatValid: Parse error: %v, %v", err, urlStr)
 	}
 	return err == nil && parsed.Scheme != "" && parsed.Host != ""
 }
@@ -366,7 +367,7 @@ func GetNetworkInterfaces() ([]NetworkInterface, error) {
 			continue
 		}
 
-		//glog.Debugf("iface: %+v", iface)
+		//z.Debugf("iface: %+v", iface)
 		var ipAddresses []string
 		var ipv4 string
 		for _, addr := range addrs {
@@ -378,7 +379,7 @@ func GetNetworkInterfaces() ([]NetworkInterface, error) {
 				ip = v.IP
 			}
 
-			//glog.Debugf("address: %+v", addr)
+			//z.Debugf("address: %+v", addr)
 			// 忽略回环地址
 			if ip.IsLoopback() {
 				continue
@@ -525,7 +526,7 @@ func GetDeviceInfo() (*NetworkInterface, error) {
 		if !isBadName(iface.Name) && notEmpty(&iface) {
 			face = &iface
 		}
-		//glog.Debugf("获取设备信息：%+v", iface)
+		//z.Debugf("获取设备信息：%+v", iface)
 	}
 
 	return face, nil

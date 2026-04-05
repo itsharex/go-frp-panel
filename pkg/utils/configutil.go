@@ -2,13 +2,15 @@ package utils
 
 import (
 	"fmt"
-	"github.com/xxl6097/glog/glog"
-	"github.com/xxl6097/go-frp-panel/pkg/model"
-	"github.com/xxl6097/go-service/pkg/utils"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
+	"github.com/xxl6097/go-frp-panel/pkg/model"
+	"github.com/xxl6097/go-service/pkg/utils"
 )
 
 func Export(obj model.CloudApi) error {
@@ -17,16 +19,16 @@ func Export(obj model.CloudApi) error {
 		return err
 	}
 	if ok, e := IsDirEmpty(userDir); ok || e != nil {
-		glog.Error("IsDirEmpty", userDir)
+		z.Error("IsDirEmpty", userDir)
 		return err
 	}
 	fileName := fmt.Sprintf("user_%s.zip", GetFileNameByTime())
-	tempDir := filepath.Join(glog.AppHome(), "user")
+	tempDir := filepath.Join(zutil.AppHome(), "user")
 	_ = utils.ResetDirector(tempDir)
 	zipFilePath := filepath.Join(tempDir, fileName)
 	err = Zip(userDir, zipFilePath)
 	if err != nil {
-		glog.Error("GetDataByJson", err)
+		z.Error("GetDataByJson", err)
 		return err
 	}
 	defer utils.DeleteAllDirector(zipFilePath)
@@ -51,7 +53,7 @@ func Export(obj model.CloudApi) error {
 }
 
 func Import(obj model.CloudApi) error {
-	dstFilePath := filepath.Join(glog.AppHome("temp"), "user_import.zip")
+	dstFilePath := filepath.Join(zutil.AppHome("temp"), "user_import.zip")
 	envType := os.Getenv("ENV_TYPE")
 	if envType == "" {
 		envType = "uuxia"
@@ -74,6 +76,6 @@ func Import(obj model.CloudApi) error {
 	if err != nil {
 		return err
 	}
-	glog.Info("解压成功", userDir)
+	z.Info("解压成功", userDir)
 	return nil
 }

@@ -4,16 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/fatedier/frp/pkg/config"
-	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/glog/glog"
-	"github.com/xxl6097/go-frp-panel/internal/com/model"
-	"github.com/xxl6097/go-frp-panel/pkg/comm"
-	"github.com/xxl6097/go-frp-panel/pkg/frp"
-	"github.com/xxl6097/go-frp-panel/pkg/utils"
-	"github.com/xxl6097/go-service/pkg/github"
-	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"github.com/xxl6097/go-service/pkg/utils/util"
 	"io"
 	"net/http"
 	"os"
@@ -21,6 +11,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fatedier/frp/pkg/config"
+	v1 "github.com/fatedier/frp/pkg/config/v1"
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
+	"github.com/xxl6097/go-frp-panel/internal/com/model"
+	"github.com/xxl6097/go-frp-panel/pkg/comm"
+	"github.com/xxl6097/go-frp-panel/pkg/frp"
+	"github.com/xxl6097/go-frp-panel/pkg/utils"
+	"github.com/xxl6097/go-service/pkg/github"
+	utils2 "github.com/xxl6097/go-service/pkg/utils"
+	"github.com/xxl6097/go-service/pkg/utils/util"
 )
 
 func (this *frpc) apiUploadCreate(w http.ResponseWriter, r *http.Request) {
@@ -47,17 +49,17 @@ func (this *frpc) apiClientCreate(w http.ResponseWriter, r *http.Request) {
 		}](r)
 		if body == nil {
 			res.Error("body is empty")
-			glog.Error(res.Msg)
+			z.Error(res.Msg)
 			return
 		}
 		if body.Name == "" {
 			res.Error("文件名空")
-			glog.Error(res.Msg)
+			z.Error(res.Msg)
 			return
 		}
 		if body.Toml == "" {
 			res.Error("toml配置空")
-			glog.Error(res.Msg)
+			z.Error(res.Msg)
 			return
 		}
 
@@ -82,7 +84,7 @@ func (this *frpc) apiClientCreate(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(32 << 20)
 		if err != nil {
 			res.Error("body can't be empty")
-			glog.Error(res.Msg)
+			z.Error(res.Msg)
 			return
 		}
 		// 获取上传的文件
@@ -135,12 +137,12 @@ func (this *frpc) apiClientCreate(w http.ResponseWriter, r *http.Request) {
 		//err = retry.Do(func() error {
 		//	e := this.newClient(newFilePath)
 		//	if e != nil {
-		//		glog.Errorf("创建frpc客户端失败: %s %v\n", newFilePath, e)
+		//		z.Errorf("创建frpc客户端失败: %s %v\n", newFilePath, e)
 		//	}
 		//	return e
 		//}, retry.Delay(time.Second*5), retry.Attempts(10))
 		err = this.newClient(newFilePath)
-		glog.Error(err)
+		z.Error(err)
 		if err != nil {
 			res.Err(err)
 			utils.Delete(newFilePath)
@@ -196,7 +198,7 @@ func (this *frpc) apiClientStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfgFilePath := filepath.Join(cfgDir, cfgName)
-	glog.Println("read status", cfgFilePath)
+	z.Println("read status", cfgFilePath)
 	buf, err := this.statusClient(cfgFilePath)
 	if err != nil {
 		res.Err(err)
@@ -259,7 +261,7 @@ func (this *frpc) apiClientConfigGet(w http.ResponseWriter, r *http.Request) {
 	cfgName := r.URL.Query().Get("name")
 	if cfgName == "" {
 		res.Error("cfg file path is empty")
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 	body, err := this.getClientChildConfig(cfgName)
@@ -312,7 +314,7 @@ func (this *frpc) clientNew(name, content string) error {
 	if err != nil {
 		return fmt.Errorf("write http body err: %v", err)
 	}
-	glog.Infof("create config file: %s", cfgPath)
+	z.Infof("create config file: %s", cfgPath)
 	err = this.newClient(cfgPath)
 	if err != nil {
 		return fmt.Errorf("run client err: %v", err)
@@ -328,7 +330,7 @@ func (this *frpc) clientDelete(name string) error {
 	if err != nil {
 		return fmt.Errorf("get executable path err: %v", err)
 	}
-	glog.Infof("delete config file: %s", cfgPath)
+	z.Infof("delete config file: %s", cfgPath)
 	err = this.deleteClient(cfgPath)
 	if err != nil {
 		return fmt.Errorf("run client err: %v", err)
@@ -365,7 +367,7 @@ func (this *frpc) apiClientConfigSet(w http.ResponseWriter, r *http.Request) {
 	}](r)
 	if body == nil {
 		res.Error("body is empty")
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 
@@ -403,7 +405,7 @@ func (this *frpc) apiClientConfigExport(w http.ResponseWriter, r *http.Request) 
 	}
 	var zipFilePath string
 	fileName := fmt.Sprintf("config_%s.zip", utils.GetFileNameByTime())
-	tempDir := glog.AppHome("config")
+	tempDir := zutil.AppHome("config")
 	zipFilePath = filepath.Join(tempDir, fileName)
 	err = utils.Zip(cfgDir, zipFilePath)
 	if err != nil {
@@ -448,7 +450,7 @@ func (this *frpc) apiClientConfigImport(w http.ResponseWriter, r *http.Request) 
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		res.Error("body can't be empty")
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 	// 获取上传的文件
@@ -465,7 +467,7 @@ func (this *frpc) apiClientConfigImport(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	glog.Info(handler.Filename)
+	z.Info(handler.Filename)
 	ext := strings.ToLower(filepath.Ext(handler.Filename)) // 统一转为小写
 	switch ext {
 	case ".zip":
@@ -487,7 +489,7 @@ func (this *frpc) apiClientConfigImport(w http.ResponseWriter, r *http.Request) 
 		err = utils.UnzipToRoot(dstFilePath, cfgDir, true)
 		if err == nil {
 			utils.Delete(dstFilePath, "用户文件")
-			glog.Info("解压成功", cfgDir)
+			z.Info("解压成功", cfgDir)
 		}
 		break
 	default:
@@ -504,8 +506,8 @@ func (this *frpc) update(url string) error {
 }
 
 func (this *frpc) getUpgradeUrl(url string) string {
-	glog.Debugf("upgrade by url: %s", url)
-	updir := glog.AppHome("temp", "upgrade")
+	z.Debugf("upgrade by url: %s", url)
+	updir := zutil.AppHome("temp", "upgrade")
 	_, _, free, _ := util.GetDiskUsage(updir)
 
 	if free < utils.GetSelfSize()*2 {
@@ -522,11 +524,11 @@ func (this *frpc) Upgrade(ctx context.Context, newFilePath string) error {
 	if newFilePath == "" {
 		return fmt.Errorf("newFilePath is empty")
 	}
-	glog.Debugf("开始升级 %s", newFilePath)
+	z.Debugf("开始升级 %s", newFilePath)
 	var ch chan error
 	go func(ch chan<- error) {
 		err := this.install.Upgrade(ctx, newFilePath)
-		glog.Debug("---->升级", err)
+		z.Debug("---->升级", err)
 		if err != nil {
 			err = fmt.Errorf("更新失败～%v", err)
 		}
@@ -536,10 +538,10 @@ func (this *frpc) Upgrade(ctx context.Context, newFilePath string) error {
 
 	select {
 	case <-ctx.Done():
-		glog.Error("请求断开", newFilePath)
+		z.Error("请求断开", newFilePath)
 		break
 	case err := <-ch:
-		glog.Error("升级成功", err, newFilePath)
+		z.Error("升级成功", err, newFilePath)
 		if err != nil {
 			return fmt.Errorf("更新失败～%v", err)
 		} else {

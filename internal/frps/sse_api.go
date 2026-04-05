@@ -2,11 +2,12 @@ package frps
 
 import (
 	"encoding/json"
+	"strings"
+
 	"github.com/gorilla/websocket"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
 	iface2 "github.com/xxl6097/go-frp-panel/pkg/comm/iface"
 	"github.com/xxl6097/go-frp-panel/pkg/comm/ws"
-	"strings"
 )
 
 func (this *frps) OnSseDisconnect(client *iface2.SSEClient) {
@@ -35,12 +36,12 @@ func (this *frps) OnSseNewConnection(client *iface2.SSEClient) {
 				Event:   ws.SSE_CONNECT,
 				Payload: client,
 			}
-			//glog.Debugf("---->%+v", client)
+			//z.Debugf("---->%+v", client)
 			err := this.sseApi.Send(client, eve)
 			if err != nil {
-				glog.Errorf("Send error: %s", err)
+				z.Errorf("Send error: %s", err)
 			} else {
-				//glog.Infof("Send success %v", client.SseId)
+				//z.Infof("Send success %v", client.SseId)
 			}
 		}
 
@@ -57,12 +58,12 @@ func (this *frps) clientRefresh(client *iface2.SSEClient) {
 		}
 		b, e := json.Marshal(msg)
 		if e != nil {
-			glog.Errorf("getConfigs error: %v", e)
+			z.Errorf("getConfigs error: %v", e)
 			return
 		}
 		e = this.webSocketApi.SendByKey(client.FrpID, client.SecKey, websocket.TextMessage, b)
 		if e != nil {
-			glog.Errorf("getConfigs error: %v", e)
+			z.Errorf("getConfigs error: %v", e)
 		}
 	}
 }

@@ -1,13 +1,14 @@
 package frps
 
 import (
+	"os"
+
 	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/model"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/ukey"
-	"os"
 )
 
 var cfgData *CfgModel
@@ -27,21 +28,21 @@ func (this *CfgModel) Bytes() []byte {
 //}
 
 func load() error {
-	defer glog.Flush()
+	//defer glog.Flush()
 	byteArray, err := ukey.Load()
 	if err != nil {
-		//glog.Error(err)
+		//z.Error(err)
 		return err
 	}
 	cfgBytes = byteArray
 	c := CfgModel{}
 	err = utils.TomlTextToObject(byteArray, &c)
 	if err != nil {
-		glog.Println("cfgBytes解析错误", err)
+		z.Println("cfgBytes解析错误", err)
 		return err
 	}
 	cfgData = &c
-	//glog.Printf("%d 配置加载成功：%+v\n", os.Getpid(), cfgData)
+	//z.Printf("%d 配置加载成功：%+v\n", os.Getpid(), cfgData)
 	pkg.Version()
 	return nil
 }
@@ -69,23 +70,23 @@ func SetCfgModel(temp *CfgModel) {
 
 //func PrintCfg() {
 //	if cfgBytes != nil {
-//		glog.Println(string(cfgBytes))
+//		z.Println(string(cfgBytes))
 //	}
 //}
 
 //func IsInit() error {
-//	//glog.Println("IsInit")
+//	//z.Println("IsInit")
 //	defer glog.Flush()
 //	err := load()
 //	if err != nil {
-//		//glog.Println(err)
+//		//z.Println(err)
 //		return err
 //	}
 //	return nil
 //}
 
 //func Assert() {
-//	//glog.Println("Assert")
+//	//z.Println("Assert")
 //	if IsInit() != nil {
 //		if utils.IsMacOs() {
 //			return
@@ -108,6 +109,6 @@ func (this *frps) InitClientsConfig() {
 	}
 	err := utils.Import(*this.cloudApi)
 	if err != nil {
-		glog.Errorf("更新失败 %+v", err)
+		z.Errorf("更新失败 %+v", err)
 	}
 }

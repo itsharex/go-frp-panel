@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/avast/retry-go/v4"
-	"github.com/xxl6097/glog/glog"
 	"time"
 )
 
@@ -25,6 +24,6 @@ func main() {
 	}, retry.Delay(time.Second), retry.Attempts(0))
 
 	if err != nil {
-		glog.Error("启动失败", err)
+		z.Error("启动失败", err)
 	}
 }

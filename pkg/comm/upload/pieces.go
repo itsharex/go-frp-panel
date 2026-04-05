@@ -2,7 +2,6 @@ package upload
 
 import (
 	"fmt"
-	"github.com/xxl6097/glog/glog"
 	"github.com/xxl6097/go-service/pkg/utils"
 	"io"
 	"net/http"
@@ -70,7 +69,7 @@ func (this *pieces) UploadHandler(w http.ResponseWriter, r *http.Request) (error
 		return fmt.Errorf("missing file hash %v", http.StatusBadRequest), ""
 	}
 
-	appDir := glog.AppHome("chunk")
+	appDir := zutil.AppHome("chunk")
 	chunkDir := filepath.Join(appDir, hash, "chunk")
 	if _, err := os.Stat(chunkDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(chunkDir, 0755); err != nil {

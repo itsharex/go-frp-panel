@@ -3,7 +3,17 @@ package comm
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/xxl6097/glog/glog"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/xxl6097/glog/pkg/z"
+	"github.com/xxl6097/glog/pkg/zutil"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	iface2 "github.com/xxl6097/go-frp-panel/pkg/comm/iface"
 	"github.com/xxl6097/go-frp-panel/pkg/comm/ws"
@@ -13,14 +23,6 @@ import (
 	"github.com/xxl6097/go-service/pkg/gs/igs"
 	"github.com/xxl6097/go-service/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/utils/util"
-	"io"
-	"net/http"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
 )
 
 type commapi struct {
@@ -33,20 +35,20 @@ func (this *commapi) ApiCMD(w http.ResponseWriter, r *http.Request) {
 	defer f(w)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		glog.Error("body读取失败", err)
+		z.Error("body读取失败", err)
 		res.Err(err)
 		return
 	}
 	if body == nil {
 		msg := "body is nil"
-		glog.Error(msg)
+		z.Error(msg)
 		res.Err(fmt.Errorf(msg))
 		return
 	}
 	var msg iface2.Message[any]
 	err = json.Unmarshal(body, &msg)
 	if err != nil {
-		glog.Error("解析Json对象失败", err)
+		z.Error("解析Json对象失败", err)
 		res.Err(err)
 		return
 	}
@@ -62,15 +64,15 @@ func (this *commapi) ApiCMD(w http.ResponseWriter, r *http.Request) {
 	case ws.CMD:
 		data, ok := msg.Data.(map[string]interface{})
 		if ok {
-			glog.Infof("data %+v", data)
+			z.Infof("data %+v", data)
 			d := data["data"]
 			if d == nil {
-				glog.Errorf("data is nil %+v", msg.Data)
+				z.Errorf("data is nil %+v", msg.Data)
 				break
 			}
 			v, okk := d.(string)
 			if !okk {
-				glog.Infof("string err %+v", d)
+				z.Infof("string err %+v", d)
 				break
 			}
 			arrData := strings.Split(v, " ")
@@ -114,12 +116,12 @@ func (this *commapi) ApiFiles(w http.ResponseWriter, r *http.Request) {
 	}](r)
 	if err != nil {
 		res.Error(fmt.Errorf("read param err: %v", err).Error())
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 	if params == nil {
 		res.Error("params is empty")
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 	path := params.Path
@@ -170,7 +172,7 @@ func (this *commapi) ApiUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	//ctx, cancel := context.WithCancel(context.Background())
 	//defer cancel()
-	updir := glog.AppHome()
+	updir := zutil.AppHome()
 	_, _, free, _ := util.GetDiskUsage(updir)
 	if free < utils2.GetSelfSize()*2 {
 		if err := utils.ClearTemp(); err != nil {
@@ -186,16 +188,16 @@ func (this *commapi) ApiUpdate(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			res.Response(400, fmt.Sprintf("read request body error: %v", err))
-			glog.Warnf("%s", res.Msg)
+			z.Warnf("%s", res.Msg)
 			return
 		}
 		if len(body) == 0 {
 			res.Response(400, "升级URL空的哦～")
-			glog.Warnf("%s", res.Msg)
+			z.Warnf("%s", res.Msg)
 			return
 		}
 		binUrl := string(body)
-		glog.Debugf("upgrade by url: %s", binUrl)
+		z.Debugf("upgrade by url: %s", binUrl)
 		newUrl := utils.DownloadFileWithCancelByUrls(github.Api().GetProxyUrls(binUrl))
 		newFilePath = newUrl
 		break
@@ -207,7 +209,7 @@ func (this *commapi) ApiUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		dstFilePath := filepath.Join(glog.AppHome("temp", "upgrade"), handler.Filename)
+		dstFilePath := filepath.Join(zutil.AppHome("temp", "upgrade"), handler.Filename)
 		//dstFilePath 名称为上传文件的原始名称
 		dst, err := os.Create(dstFilePath)
 		if err != nil {
@@ -228,9 +230,9 @@ func (this *commapi) ApiUpdate(w http.ResponseWriter, r *http.Request) {
 		res.Error("位置请求方法")
 	}
 	if newFilePath != "" {
-		glog.Debugf("开始升级 %s", newFilePath)
+		z.Debugf("开始升级 %s", newFilePath)
 		err := this.igs.Upgrade(ctx, newFilePath)
-		glog.Debug("---->升级", err)
+		z.Debug("---->升级", err)
 		if err == nil {
 			res.Ok("升级成功～")
 		} else {
@@ -255,9 +257,9 @@ func (this *commapi) ApiRestart(w http.ResponseWriter, r *http.Request) {
 			//	err = this.igs.Restart()
 			//}
 			if err != nil {
-				glog.Error("重启失败")
+				z.Error("重启失败")
 			}
-			glog.Error("重启ok")
+			z.Error("重启ok")
 		}()
 	}
 }
@@ -269,7 +271,7 @@ func (this *commapi) ApiCheckVersion(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		res.Err(err)
 	} else {
-		glog.Debug("version:", data)
+		z.Debug("version:", data)
 		res.Any(data)
 	}
 	//args, err := utils2.CheckVersionFromGithub()
@@ -288,11 +290,11 @@ func (this *commapi) ApiCheckVersion(w http.ResponseWriter, r *http.Request) {
 func (this *commapi) ApiClear(w http.ResponseWriter, r *http.Request) {
 	res, f := Response(r)
 	defer f(w)
-	glog.Infof("Http request: [%s]", r.URL.Path)
+	z.Infof("Http request: [%s]", r.URL.Path)
 	binPath, err := os.Executable()
 	if err != nil {
 		res.Error(fmt.Sprintf("获取当前可执行文件路径出错: %v\n", err))
-		glog.Error(res.Msg)
+		z.Error(res.Msg)
 		return
 	}
 	binDir := filepath.Dir(binPath)
@@ -323,9 +325,9 @@ func (this *commapi) ApiUninstall(w http.ResponseWriter, r *http.Request) {
 			//err = this.igs.RunCmd("uninstall")
 			err = this.igs.UnInstall()
 			if err != nil {
-				glog.Error("uninstall 失败", err)
+				z.Error("uninstall 失败", err)
 			} else {
-				glog.Error("uninstall ok")
+				z.Error("uninstall ok")
 			}
 		}()
 	}
@@ -334,7 +336,7 @@ func (this *commapi) ApiVersion(w http.ResponseWriter, r *http.Request) {
 	res, f := Response(r)
 	defer f(w)
 	res.Sucess("获取成功", utils2.GetVersion())
-	//glog.Println("操作系统:", runtime.GOOS)     // 如 "linux", "windows"
-	//glog.Println("CPU 架构:", runtime.GOARCH) // 如 "amd64", "arm64"
-	//glog.Println("CPU 核心数:", runtime.NumCPU())
+	//z.Println("操作系统:", runtime.GOOS)     // 如 "linux", "windows"
+	//z.Println("CPU 架构:", runtime.GOARCH) // 如 "amd64", "arm64"
+	//z.Println("CPU 核心数:", runtime.NumCPU())
 }

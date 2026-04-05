@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/xxl6097/glog/glog"
+	"github.com/xxl6097/glog/pkg/z"
 	"github.com/xxl6097/go-frp-panel/pkg"
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"math"
@@ -79,7 +79,7 @@ func (c *Websocketclient) Connect() error {
 				c.openHandler(conn, resp)
 			}
 			c.isConnected = true
-			glog.Printf("WebSocket连接成功: %s", c.url)
+			z.Printf("WebSocket连接成功: %s", c.url)
 			go c.readMessages()
 			return nil
 		}
@@ -94,7 +94,7 @@ func (c *Websocketclient) Connect() error {
 		if resp != nil {
 			errMsg = resp.Status
 		}
-		glog.Printf("%s 连接失败，尝试重连 %v %v", c.url, err, errMsg)
+		z.Printf("%s 连接失败，尝试重连 %v %v", c.url, err, errMsg)
 		time.Sleep(c.reconnectDelay)
 	}
 }
@@ -152,9 +152,9 @@ func (c *Websocketclient) readMessages() {
 			if c.errorHandler != nil {
 				c.errorHandler(err)
 			}
-			glog.Printf("WebSocket断开: %v", err)
+			z.Printf("WebSocket断开: %v", err)
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				glog.Printf("WebSocket意外关闭: %v", err)
+				z.Printf("WebSocket意外关闭: %v", err)
 				//go c.reconnect()
 			}
 			go c.reconnect()
@@ -173,7 +173,7 @@ func (c *Websocketclient) reconnect() {
 		return
 	}
 
-	glog.Println("开始重新连接...")
+	z.Println("开始重新连接...")
 	// 避免阻塞其他操作
 	go func() {
 		err := c.Connect()
@@ -201,7 +201,7 @@ func GetClientInstance() *Client {
 			clients: make(map[string]*Websocketclient),
 			timeout: 0,
 		}
-		glog.Println("WebSocket Singleton client instance created")
+		z.Println("WebSocket Singleton client instance created")
 	})
 	return instance
 }
@@ -210,7 +210,7 @@ func (c *Client) NewClient(id, serverAddress, authorization string) {
 	var err error
 	defer func() {
 		if err != nil {
-			glog.Errorf("websocket连接失败: %v", err)
+			z.Errorf("websocket连接失败: %v", err)
 		}
 	}()
 	if id == "" {
@@ -230,21 +230,21 @@ func (c *Client) NewClient(id, serverAddress, authorization string) {
 	cls := NewWebSocketClient(baseUrl, header)
 	// 设置消息处理函数
 	cls.SetMessageHandler(func(message []byte) {
-		glog.Printf("收到消息: %s", string(message))
+		z.Printf("收到消息: %s", string(message))
 	})
 	// 设置错误处理函数
 	cls.SetOpenHandler(func(conn *websocket.Conn, response *http.Response) {
-		glog.Errorf("连接成功: %v,%v,Status:%v", conn.LocalAddr(), conn.RemoteAddr(), response.Status)
+		z.Errorf("连接成功: %v,%v,Status:%v", conn.LocalAddr(), conn.RemoteAddr(), response.Status)
 	})
 
 	// 设置错误处理函数
 	cls.SetErrorHandler(func(err error) {
-		glog.Errorf("发生错误: %v", err)
+		z.Errorf("发生错误: %v", err)
 	})
 
 	// 设置关闭处理函数
 	cls.SetCloseHandler(func(code int, text string) {
-		glog.Errorf("连接关闭: %d %s", code, text)
+		z.Errorf("连接关闭: %d %s", code, text)
 	})
 
 	// 设置重连配置
@@ -253,9 +253,9 @@ func (c *Client) NewClient(id, serverAddress, authorization string) {
 	c.clients[serverAddress] = cls
 	go func() {
 		// 连接到服务器
-		glog.Warnf("websocket连接 baseurl:%s,header:%+v", baseUrl, header)
+		z.Warnf("websocket连接 baseurl:%s,header:%+v", baseUrl, header)
 		if err := cls.Connect(); err != nil {
-			glog.Errorf("连接失败: %v", err)
+			z.Errorf("连接失败: %v", err)
 		}
 	}()
 }
@@ -278,7 +278,7 @@ func (c *Client) header(id, authorization string) *http.Header {
 		h.Set("InterfaceName", devInfo.Name)
 		h.Set("DisplayName", devInfo.DisplayName)
 	} else {
-		glog.Error("获取设备信息失败", err)
+		z.Error("获取设备信息失败", err)
 		c.timeout++
 		time.Sleep(time.Second * 5)
 		if c.timeout < 20 {
@@ -308,7 +308,7 @@ func (c *Client) SendJSON(data interface{}) error {
 	for k, v := range c.clients {
 		if v != nil {
 			err = v.sendMessage(websocket.TextMessage, jsonData)
-			glog.Debugf("sendMessage %s %v", k, err)
+			z.Debugf("sendMessage %s %v", k, err)
 		}
 	}
 	return err
@@ -347,11 +347,11 @@ func (c *Client) SetMessageHandler(handler func([]byte)) {
 
 func Connect(baseUrl, user, pass string) {
 	header := http.Header{}
-	header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(glog.Sprintf("%s:%s", user, pass))))
+	header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", user, pass))))
 	conn, resp, err := websocket.DefaultDialer.DialContext(context.Background(), baseUrl, header)
 	if err != nil {
-		glog.Fatal("连接失败:", err, resp)
+		z.Fatal("连接失败:", err, resp)
 	}
-	glog.Debug(conn, resp, err)
+	z.Debug(conn, resp, err)
 	defer conn.Close()
 }
