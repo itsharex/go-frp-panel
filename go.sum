@@ -144,8 +144,8 @@ github.com/xtaci/lossyconn v0.0.0-20200209145036-adba10fffc37 h1:EWU6Pktpas0n8lL
 github.com/xtaci/lossyconn v0.0.0-20200209145036-adba10fffc37/go.mod h1:HpMP7DB2CyokmAh4lp0EQnnWhmycP/TvwBGzvuie+H0=
 github.com/xxl6097/glog v0.1.85 h1:uqxgqvjaIo7xcVdl0Dp3UsflnDHtnkIYhQSeG87hYvQ=
 github.com/xxl6097/glog v0.1.85/go.mod h1:ACcixOvbQXtVaVjlU7+K2IXTwaJUNbRlJISeWmGFZJU=
-github.com/xxl6097/go-service v0.7.22 h1:PPc0aEQdeKbkfihig+GhvvoIpBjHg9sufO3fjb9jhts=
-github.com/xxl6097/go-service v0.7.22/go.mod h1:rzRfNdbhqFogV47pOIcNrOhU89RUKqRr9pIXIBTQ1zw=
+github.com/xxl6097/go-service v0.7.23 h1:8LT7mCvKskaZmRH0sldFcKEJNsooWgkEBVF71u8Jq/Y=
+github.com/xxl6097/go-service v0.7.23/go.mod h1:rzRfNdbhqFogV47pOIcNrOhU89RUKqRr9pIXIBTQ1zw=
 github.com/xxl6097/go-update v0.0.6 h1:z7ipTgVjlXVVNRgMjrrgZfXfDZdb2LUJjsvMh4qwEu8=
 github.com/xxl6097/go-update v0.0.6/go.mod h1:9UQ2j2O/xLQA7laXvxfnOruPUkq9zaLRG/AbwV3TFAM=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
