@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	v1 "github.com/fatedier/frp/pkg/config/v1"
-	"github.com/xxl6097/go-frp-panel/cmd"
-	"github.com/xxl6097/go-frp-panel/internal/frps"
-	frps2 "github.com/xxl6097/go-frp-panel/pkg/frp/frps"
 	"os"
 	"path/filepath"
+
+	v1 "github.com/fatedier/frp/pkg/config/v1"
+	"github.com/xxl6097/go-frp-panel/cmd"
+	frps2 "github.com/xxl6097/go-frp-panel/pkg/frp/frps"
 )
 
 func main() {
@@ -39,9 +39,9 @@ func main() {
 				MaxDays: 15,
 			},
 		}
-		frps.Test(&frps.CfgModel{
-			Frps: *cfg,
-		})
+		//frps.Test(&frps.CfgModel{
+		//	Frps: *cfg,
+		//})
 		//content, _ := json.Marshal(cfg)
 		svv, err := frps2.NewFrps(cfg, nil)
 		if err != nil {

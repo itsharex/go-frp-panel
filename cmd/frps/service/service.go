@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+	"path/filepath"
+
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/util/version"
 	"github.com/kardianos/service"
@@ -13,8 +15,8 @@ import (
 	"github.com/xxl6097/go-frp-panel/pkg/utils"
 	"github.com/xxl6097/go-service/pkg/gs"
 	"github.com/xxl6097/go-service/pkg/gs/igs"
+	"github.com/xxl6097/go-service/pkg/ukey"
 	utils2 "github.com/xxl6097/go-service/pkg/utils"
-	"path/filepath"
 )
 
 type Service struct {
@@ -58,9 +60,8 @@ func (s *Service) OnConfig() *service.Config {
 }
 
 func (s *Service) OnVersion() string {
-	//fmt.Println(string(ukey.GetBuffer()))
-	//这里需要打印config中buffer原始信息
 	pkg.Version()
+	fmt.Println(string(ukey.GetBuffer()))
 	return fmt.Sprintf("frps version:%s", version.Full())
 }
 
